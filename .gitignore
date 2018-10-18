@@ -1,0 +1,12 @@
+*.pyc
+*.pkl
+*.wav
+.idea
+._*
+*.orig
+*_Store
+__pycache__/
+tests/__pycache__/
+.cache/
+examples/data
+examples/dump
