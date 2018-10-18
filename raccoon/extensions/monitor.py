@@ -8,9 +8,9 @@ class MetricMonitor(Extension):
     """Extension to monitor metrics during training.
 
     This is an abstract class with two children classes:
-        - :class:`TrainMonitor`: the extension responsible for training and monitoring metrics on
+        - `TrainMonitor`: the extension responsible for training and monitoring metrics on
             the training dataset.
-        - :class:`ValidationMonitor`: an extension for monitoring metrics on a validation dataset.
+        - `ValidationMonitor`: an extension for monitoring metrics on a validation dataset.
 
     Attributes:
         fun_batch_metrics (function):
@@ -49,8 +49,7 @@ class MetricMonitor(Extension):
             self.history[metric_name].append(v)
             self.iterations[metric_name].append(batch_id)
 
-        return self.log([f'{str_grey(metric)}: '
-                         f'{dict_metric_values[metric]:.7g}'
+        return self.log([f'{str_grey(metric)}: {dict_metric_values[metric]:.7g}'
                          for metric in self.metric_names])
 
     def compute_metrics(self):

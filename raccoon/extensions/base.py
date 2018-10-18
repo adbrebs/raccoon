@@ -1,3 +1,5 @@
+
+
 class Extension(object):
     """
     Extensions represent objects that perform various operations during the training process.
@@ -6,7 +8,7 @@ class Extension(object):
     Extension instances are provided to a :class:`Trainer` instance. Their method `execute` is
     called every `freq` minibatches by the `Trainer` instance.
 
-    If you inherit from Extension, the only methods that you should overload are `__init__` and
+    If you inherit from Extension, the only methods that you should override are `__init__` and
     `_execute`.
 
     Attributes:
@@ -53,9 +55,17 @@ class Extension(object):
         if not freq_cond:
             return self.log()
 
-        return self._execute(batch_id, epoch_id, end_epoch=end_epoch)
+        log = self._execute(batch_id, epoch_id, end_epoch=end_epoch)
+        return log if log else self.log()
 
     def _execute(self, batch_id, epoch_id, end_epoch=False):
+        """Performs the operations of the extension. Should be overriden in the child class.
+
+        Returns:
+            either:
+                - a Log object created with self.log method ,
+                - or None if nothing has to be logged.
+        """
         raise NotImplementedError
 
     def start(self):
@@ -67,6 +77,7 @@ class Extension(object):
         return self._execute(batch_id, epoch_id)
 
     def log(self, lines=None, stop_training=False):
+        """Creates a log object to potentially display information in the terminal."""
         return Log(extension=self, lines=lines, stop_training=stop_training)
 
 

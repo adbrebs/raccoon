@@ -307,7 +307,7 @@ class ScalarDecay(Extension):
     def _execute(self, batch_id, epoch_id, end_epoch=False):
         self.n_attempts_to_decay += 1
         if self.n_attempts_to_decay <= self.decay_start_after:
-            return self.log()
+            return
 
         self.var.multiply_by(self.decay_rate)
         return self.log([f'New learning rate: {self.var.read()}'])
@@ -328,7 +328,7 @@ class MaxIteration(Extension):
             return self.log(['Maximal number of batches reached'], stop_training=True)
         if epoch_id > self.max_epochs:
             return self.log(['Maximal number of epochs reached'], stop_training=True)
-        return self.log()
+        return
 
 
 class MaxTime(Extension):
@@ -342,4 +342,4 @@ class MaxTime(Extension):
     def _execute(self, batch_id, epoch_id, end_epoch=False):
         if (time.time() - self.begin_time) > self.max_time:
             return self.log(['Time exceeded'], stop_training=True)
-        return self.log()
+        return

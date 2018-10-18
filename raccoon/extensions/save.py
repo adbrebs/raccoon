@@ -38,7 +38,7 @@ class Saver(Extension):
 
     def start(self):
         if not self.restore_path:
-            return Extension.start(self)
+            return super().start()
 
         self.restore(self.restore_path)
         return self.log([f'Object loaded from disk path: {self.restore_path}'])
@@ -54,12 +54,10 @@ class Saver(Extension):
         if not file_path:
             file_path = self.file_path
 
-        res = self.save_virtual(file_path)
-        if res:
-            return res
-        return [self.name + f' dumped into {self.folder_path.resolve()}']
+        res = self._save(file_path)
+        return res if res else [self.name + f' dumped into {self.folder_path.resolve()}']
 
-    def save_virtual(self, file_path):
+    def _save(self, file_path):
         if self.fun_save:
             return self.fun_save(file_path)
         raise NotImplementedError
@@ -68,9 +66,9 @@ class Saver(Extension):
         if not file_path:
             file_path = self.file_path
 
-        return self.restore_virtual(file_path)
+        return self._restore(file_path)
 
-    def restore_virtual(self, file_path):
+    def _restore(self, file_path):
         if self.fun_restore:
             return self.fun_restore(file_path)
         raise NotImplementedError
@@ -88,7 +86,7 @@ class MetricSaver(Saver):
         super().__init__('Metric saver ' + name, freq, folder_path, 'metric_saver_' + name)
         self.metric_monitor = metric_monitor
 
-    def save_virtual(self, file_path):
+    def _save(self, file_path):
 
         with open(file_path, 'wb') as file_handle:
             d = {'iterations': self.metric_monitor.iterations,
@@ -174,12 +172,12 @@ class MonitorObjectSaver(Saver):
             # Check if dont_save_for_first_n_it has passed
             if not ((self.dont_dump_for_first_n_it is None) or
                     (self.n_times_checked >= self.dont_dump_for_first_n_it)):
-                return self.log()
+                return
 
         # If it has never been dumped, we dump it.
         if (self.dont_dump_for_first_n_it is not None and
             self.dont_dump_for_first_n_it == self.n_times_checked):
-            return self.log()
+            return
 
         return super()._execute(batch_id, epoch_id, end_epoch)
 

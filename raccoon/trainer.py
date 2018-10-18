@@ -171,7 +171,7 @@ class Trainer:
         try:
             self.finish()
         except KeyboardInterrupt:
-            print_red('Ok fine, we completely stop.')
+            print_red("Alright! We don't even run the extensions one last time.")
             sys.exit()
 
     def print_lines(self, times=1):
