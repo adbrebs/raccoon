@@ -126,7 +126,7 @@ class Trainer:
         print_green('Training starts!')
         self.print_lines(2)
 
-        extensions_start = [ext for ext in self.extensions if ext.apply_start]
+        extensions_start = [ext for ext in self.extensions if ext.on_start]
         if not any(extensions_start):
             return
 
@@ -139,7 +139,7 @@ class Trainer:
         self.print_lines(2)
         print_green(f'Training finished after {pretty_time(time_spent)}')
 
-        extensions_end = [ext for ext in self.extensions if ext.apply_end]
+        extensions_end = [ext for ext in self.extensions if ext.on_end]
         if any(extensions_end):
             print_green('Computing final extensions...')
             self.print_logs([self.finish_extension(ext) for ext in extensions_end])

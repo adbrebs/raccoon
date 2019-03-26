@@ -19,17 +19,17 @@ class Extension(object):
             - None: The extension is never called (or maybe at the beginning or the end of
                 training).
             - 'epoch', The extension is called at the end of each epoch.
-        apply_start (bool, default False):
-            Applies the extension at the start of training.
-        apply_end (bool, default False):
-            Applies the extension at the end of training or when training is interrupted.
+        on_start (bool, default False):
+            Executes the extension at the start of training.
+        on_end (bool, default False):
+            Executes the extension at the end of training or when training is interrupted.
     """
 
-    def __init__(self, name, freq, apply_end=False, apply_start=False):
+    def __init__(self, name, freq, on_end=False, on_start=False):
         self.name = name
         self.freq = freq
-        self.apply_end = apply_end
-        self.apply_start = apply_start
+        self.on_end = on_end
+        self.on_start = on_start
 
     def execute(self, batch_id, epoch_id, end_epoch=False):
         """This method is called at every minibatch of the training process.

@@ -94,7 +94,7 @@ if __name__ == '__main__':
         metric_names=["nll", "acc"],
         freq=1000,
         data_generator=valid_data_gen,
-        apply_start=True)
+        on_start=True)
 
     valid_saver = MetricSaver(
         metric_monitor=valid_monitor,

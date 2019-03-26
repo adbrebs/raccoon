@@ -73,10 +73,10 @@ class ValidationMonitor(MetricMonitor):
     """
 
     def __init__(self, name, fun_batch_metrics, metric_names, freq,
-                 data_generator, apply_end=True, apply_start=False):
+                 data_generator, on_end=True, on_start=False):
         super().__init__(
             name, fun_batch_metrics, metric_names, freq,
-            apply_end=apply_end, apply_start=apply_start)
+            on_end=on_end, on_start=on_start)
         self.data_generator = data_generator
 
     def compute_metrics(self):
@@ -104,9 +104,9 @@ class TrainMonitor(MetricMonitor):
     metrics computed on the trainig dataset.
     """
 
-    def __init__(self, fun_batch_metrics, metric_names, freq, apply_end=False):
+    def __init__(self, fun_batch_metrics, metric_names, freq, on_end=False):
         super().__init__('Training', fun_batch_metrics, metric_names, freq,
-                         apply_start=False, apply_end=apply_end)
+                         on_start=False, on_end=on_end)
 
         # This extension updates the following variables while the train method is called:
         # Computed metrics until they are displayed

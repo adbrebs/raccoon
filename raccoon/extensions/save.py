@@ -19,12 +19,12 @@ class Saver(Extension):
     """
 
     def __init__(self, name, freq, folder_path, file_name,
-                 apply_end=True, apply_start=False,
+                 on_end=True, on_start=False,
                  fun_save=None, fun_restore=None, restore_path='', **kwargs):
         super().__init__(name,
                          freq,
-                         apply_end=apply_end,
-                         apply_start=apply_start)
+                         on_end=on_end,
+                         on_start=on_start)
         self.folder_path = Path(folder_path)
         self.folder_path.mkdir(parents=True, exist_ok=True)
         self.file_name = file_name
@@ -34,7 +34,7 @@ class Saver(Extension):
         self.restore_path = restore_path
 
         if restore_path:
-            self.apply_start = True
+            self.on_start = True
 
     def start(self):
         if not self.restore_path:
@@ -130,13 +130,13 @@ class MonitorObjectSaver(Saver):
     def __init__(self, monitor_extension, metric_name, folder_path,
                  fun_save, object_name, fun_restore=None,
                  restore_at_the_end=True, file_name='best.obj',
-                 apply_end=True, apply_start=False,
+                 on_end=True, on_start=False,
                  metric_mode='min', dont_save_for_first_n_it=None, freq=False,
                  restore_path=""):
         if not freq:
             freq = monitor_extension.freq
         super().__init__(f'Best {object_name} Saver', freq, folder_path,
-                         file_name, apply_end, apply_start, fun_save=fun_save,
+                         file_name, on_end, on_start, fun_save=fun_save,
                          fun_restore=fun_restore, restore_path=restore_path)
 
         self.object_name = object_name
