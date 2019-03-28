@@ -1,7 +1,8 @@
 """Highly inspired from https://github.com/pytorch/examples/tree/master/mnist."""
 
+import os
 import sys
-sys.path.insert(0, '../raccoon')
+sys.path.insert(0, '..')
 
 import torch
 import torch.nn as nn
@@ -36,8 +37,12 @@ class Net(nn.Module):
 
 
 def create_data_generator(train_set, batch_size):
+    data_folder = './data'
+    if not os.path.exists(data_folder):
+        os.mkdir(data_folder)
+
     loader = torch.utils.data.DataLoader(
-        datasets.MNIST('./data', train=train_set, download=True, transform=transforms.Compose([
+        datasets.MNIST(data_folder, train=train_set, download=True, transform=transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize((0.1307,), (0.3081,))])),
         batch_size=batch_size, shuffle=True)
@@ -86,6 +91,10 @@ if __name__ == '__main__':
     ###########################
     # Monitoring with Raccoon #
     ###########################
+    dump_folder = "./dump"
+    if not os.path.exists(dump_folder):
+        os.mkdir(dump_folder)
+
     train_monitor = TrainMonitor(
         fun_batch_metrics=train,
         metric_names=["nll"],
@@ -115,7 +124,7 @@ if __name__ == '__main__':
     best_net_saver = MonitorObjectSaver(
         monitor_extension=valid_monitor,
         metric_name="acc",
-        folder_path="./dump",
+        folder_path=dump_folder,
         fun_save=lambda path: torch.save(model.state_dict(), path),
         object_name="best_model.net",
         metric_mode="max")
@@ -133,7 +142,7 @@ if __name__ == '__main__':
         mutable_lr.write(state_dict["lr"])
 
 
-    checkpoint = Checkpoint(extensions, "./dump/", 3,
+    checkpoint = Checkpoint(extensions, dump_folder, 3,
                             fun_save=fun_save_state,
                             fun_load=fun_load_state,
                             on_end=False)
