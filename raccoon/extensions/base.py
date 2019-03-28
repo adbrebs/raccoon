@@ -92,10 +92,13 @@ class Extension(object):
         return Log(extension=self, lines=lines, stop_training=stop_training)
 
     def state_dict(self):
+        """Creates a dict representing the pickable state of the extension. Either initialize
+        self.state_dict_attributes or, for special cases, overwrite this method."""
         all_attributes = vars(self)
         return {k: all_attributes[k] for k in self.state_dict_attributes}
 
     def load_state_dict(self, state_dict):
+        """Loads a dict created by the state_dict method."""
         vars(self).update(state_dict)
 
 
