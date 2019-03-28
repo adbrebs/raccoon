@@ -46,8 +46,9 @@ class Extension(object):
         """This method is called at every minibatch of the training process.
 
         Args:
-            trainer (Trainer class): The trainer object to which the extension is registered.
-                You can access its attributes, such as the current batch or epoch IDs.
+            trainer (`Trainer` class, optional): The trainer object to which the extension is
+                registered. If needed, you can access its attributes, such as the current batch
+                or epoch IDs.
             end_epoch (bool): Indicates if it's the last minibatch of an epoch.
 
         Returns:
