@@ -23,6 +23,15 @@ class Extension(object):
             Executes the extension at the start of training.
         on_end (bool, default False):
             Executes the extension at the end of training or when training is interrupted.
+        state_dict_attributes (iterable of strings):
+            Specifies which attributes of the extension should be saved in the state_dict of the
+            extension. This is useful when you want to use checkpointing.
+
+    Notes:
+        - if you want to save the state of the extension during training, you should a) add a
+            Checkpoint extension to the Trainer object, and either b.1) specify
+            state_dict_attributes to be saved or b.2) overwrite the state_dict and load_state_dict
+            methods.
     """
 
     def __init__(self, name, freq, on_end=False, on_start=False):
@@ -31,14 +40,14 @@ class Extension(object):
         self.on_end = on_end
         self.on_start = on_start
 
-        self.checkpoint_attributes = None
+        self.state_dict_attributes = None
 
-    def execute(self, batch_id, epoch_id, end_epoch=False):
+    def execute(self, trainer=None, end_epoch=False):
         """This method is called at every minibatch of the training process.
 
         Args:
-            batch_id (int): The batch id at which the extension is called.
-            epoch_id (int): The epoch id at which the extension is called.
+            trainer (Trainer class): The trainer object to which the extension is registered.
+                You can access its attributes, such as the current batch or epoch IDs.
             end_epoch (bool): Indicates if it's the last minibatch of an epoch.
 
         Returns:
@@ -52,15 +61,15 @@ class Extension(object):
             freq_cond = end_epoch
 
         else:
-            freq_cond = not (batch_id % self.freq)
+            freq_cond = not (trainer.batch % self.freq)
 
         if not freq_cond:
             return self.log()
 
-        log = self._execute(batch_id, epoch_id, end_epoch=end_epoch)
+        log = self._execute(trainer, end_epoch=end_epoch)
         return log if log else self.log()
 
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
+    def _execute(self, trainer=None, end_epoch=False):
         """Performs the operations of the extension. Should be overriden in the child class.
 
         Returns:
@@ -70,13 +79,13 @@ class Extension(object):
         """
         raise NotImplementedError
 
-    def start(self):
+    def start(self, trainer=None):
         """Re-implement this method if you want a custom behavior at the beginning of training."""
-        return self._execute(0, 0)
+        return self._execute(trainer=trainer)
 
-    def finish(self, batch_id, epoch_id):
+    def finish(self, trainer=None):
         """Re-implement this method if you want a custom behavior at the end of training."""
-        return self._execute(batch_id, epoch_id)
+        return self._execute(trainer=trainer)
 
     def log(self, lines=None, stop_training=False):
         """Creates a log object to potentially display information in the terminal."""
@@ -84,7 +93,7 @@ class Extension(object):
 
     def state_dict(self):
         all_attributes = vars(self)
-        return {k: all_attributes[k] for k in self.checkpoint_attributes}
+        return {k: all_attributes[k] for k in self.state_dict_attributes}
 
     def load_state_dict(self, state_dict):
         vars(self).update(state_dict)

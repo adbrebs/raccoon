@@ -1,13 +1,9 @@
 from raccoon.extensions.base import Extension
 from raccoon.extensions.checkpoint import Checkpoint
 from raccoon.extensions.monitor import (
-    ValidMonitor,
     ValidationMonitor,
     TrainMonitor)
-from raccoon.extensions.save import (
-    MetricSaver,
-    ModelSaver,
-    MonitorObjectSaver)
+from raccoon.extensions.save import MonitorObjectSaver
 from raccoon.extensions.schedule import (
     ValidationSchedule,
     MutableScalarInterface,

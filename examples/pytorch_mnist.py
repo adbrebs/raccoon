@@ -1,5 +1,8 @@
 """Highly inspired from https://github.com/pytorch/examples/tree/master/mnist."""
 
+import sys
+sys.path.insert(0, '../raccoon')
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,8 +11,8 @@ from torchvision import datasets, transforms
 
 
 from raccoon import (
-    TrainMonitor, ValidMonitor, MaxIteration, MutableDictValue, ScalarValidationSchedule,
-    MetricSaver, ModelSaver, Checkpoint)
+    TrainMonitor, ValidationMonitor, MaxIteration, MutableDictValue, ScalarValidationSchedule,
+    Checkpoint, MonitorObjectSaver)
 from raccoon.trainer import Trainer
 
 
@@ -86,19 +89,15 @@ if __name__ == '__main__':
     train_monitor = TrainMonitor(
         fun_batch_metrics=train,
         metric_names=["nll"],
-        freq=200)
+        freq=1)
 
-    valid_monitor = ValidMonitor(
+    valid_monitor = ValidationMonitor(
         name="Validation",
         fun_batch_metrics=valid,
         metric_names=["nll", "acc"],
         freq=1000,
         data_generator=valid_data_gen,
         on_start=True)
-
-    valid_saver = MetricSaver(
-        metric_monitor=valid_monitor,
-        folder_path="./dump")
 
     max_epoch = MaxIteration(
         max_epochs=10)
@@ -113,23 +112,35 @@ if __name__ == '__main__':
         metric_mode="max",
         name="Learning rate schedule")
 
-    best_net_saver = ModelSaver(
-        freq=1000,
+    best_net_saver = MonitorObjectSaver(
+        monitor_extension=valid_monitor,
+        metric_name="acc",
         folder_path="./dump",
-        fun_save=lambda path: torch.save(model.state_dict(), path))
+        fun_save=lambda path: torch.save(model.state_dict(), path),
+        object_name="best_model.net",
+        metric_mode="max")
 
-    extensions = [valid_monitor, valid_saver, max_epoch, lr_schedule, best_net_saver]
+    extensions = [valid_monitor, max_epoch, lr_schedule, best_net_saver]
 
-    def fun_save_state(trainer):
+    def fun_save_state():
         return {"model": model.state_dict(),
                 "optimizer": optimizer.state_dict(),
                 "lr": mutable_lr.read()}
 
-    checkpoint = Checkpoint(extensions, "", 100)
+    def fun_load_state(state_dict):
+        model.load_state_dict(state_dict['model'])
+        optimizer.load_state_dict(state_dict['optimizer'])
+        mutable_lr.write(state_dict["lr"])
+
+
+    checkpoint = Checkpoint(extensions, "./dump/", 3,
+                            fun_save=fun_save_state,
+                            fun_load=fun_load_state,
+                            on_end=False)
 
     trainer = Trainer(
         train_monitor=train_monitor,
         data_generator=train_data_gen,
-        extensions=extensions)
+        extensions=extensions + [checkpoint])
 
     trainer.train()

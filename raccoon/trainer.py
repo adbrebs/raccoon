@@ -1,10 +1,8 @@
 from collections import defaultdict
 from contextlib import contextmanager
-from itertools import chain
 import sys
 import time
 
-from raccoon import Extension
 from raccoon.utils import wrap_text, print_green, print_red, str_magenta, str_yellow, pretty_time
 
 
@@ -23,6 +21,10 @@ class Trainer:
             Maximal number of character per line until the string is wrapped
         batch (int): Number of minibatches processed so far.
         epoch (int): Number of epochs processed so far.
+
+    Notes:
+        - If you want to save the current state of training, be sure to include a Checkpoint
+            extension in the list of extensions that you feed to the constructor.
     """
 
     def __init__(self, train_monitor, data_generator, extensions=None,
@@ -114,7 +116,7 @@ class Trainer:
 
     def print_logs(self, logs):
         for log in logs:
-            if not log.lines:
+            if not log or not log.lines:
                 continue
             ext = log.extension
             timing = self.cur_timings.pop(ext)  # Reset current timings
@@ -199,12 +201,12 @@ class Trainer:
 
     def execute_extension(self, ext, end_epoch):
         with self.time_extension(ext):
-            return ext.execute(self.batch, self.epoch, end_epoch)
+            return ext.execute(self, end_epoch)
 
     def start_extension(self, ext):
         with self.time_extension(ext):
-            return ext.start()
+            return ext.start(self)
 
     def finish_extension(self, ext):
         with self.time_extension(ext):
-            return ext.finish(self.batch, self.epoch)
+            return ext.finish(self)

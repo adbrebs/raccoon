@@ -63,7 +63,7 @@ class ValidationSchedule(Extension):
 
         self.checkpoint_attributes = ("waiting", "total_waiting", "best_value")
 
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
+    def _execute(self, trainer=None, end_epoch=False):
 
         if self.total_waiting > self.absolute_patience:
             return self.log(['Patience exceeded'], stop_training=True)
@@ -225,8 +225,8 @@ class ScalarValidationSchedule(ValidationSchedule):
                          patience=patience, max_patience=max_patience,
                          metric_mode=metric_mode, name=name)
 
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
-        log = super()._execute(batch_id, epoch_id, end_epoch)
+    def _execute(self, trainer=None, end_epoch=False):
+        log = super()._execute(trainer, end_epoch)
         if not log.stop_training:
             if self.min_value and self.var < self.min_value:
                 return self.log(['too small'], stop_training=True)
@@ -264,11 +264,11 @@ class ScalarSchedule(Extension):
         self.iteration_ids = iteration_ids
         self.scalar_values = scalar_values
 
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
-        if batch_id not in self.iteration_ids:
-            return self.log()
+    def _execute(self, trainer=None, end_epoch=False):
+        if trainer.batch not in self.iteration_ids:
+            return
 
-        value = self.scalar_values[self.iteration_ids.index(batch_id)]
+        value = self.scalar_values[self.iteration_ids.index(trainer.batch)]
         self.var.write(value)
         return self.log([f'New {self.var.name}: {self.var.read()}'])
 
@@ -285,8 +285,8 @@ class ScalarLinearRange(Extension):
         self.n_batches = n_batches
         self.decay_rate = (end_val / init_val) ** (freq / n_batches)
 
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
-        if batch_id > self.n_batches:
+    def _execute(self, trainer=None, end_epoch=False):
+        if trainer.batch > self.n_batches:
             return self.log(['Learning rate too small'], stop_training=True)
 
         self.var.multiply_by(self.decay_rate)
@@ -306,7 +306,7 @@ class ScalarDecay(Extension):
         self.decay_start_after = decay_start_after
         self.n_attempts_to_decay = 0
 
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
+    def _execute(self, trainer=None, end_epoch=False):
         self.n_attempts_to_decay += 1
         if self.n_attempts_to_decay <= self.decay_start_after:
             return
@@ -325,10 +325,10 @@ class MaxIteration(Extension):
         if math.isinf(max_batchs) and math.isinf(max_epochs):
             raise Exception('Either max_batchs or max_epochs should be set.')
 
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
-        if batch_id > self.max_batchs:
+    def _execute(self, trainer=None, end_epoch=False):
+        if trainer.batch > self.max_batchs:
             return self.log(['Maximal number of batches reached'], stop_training=True)
-        if epoch_id > self.max_epochs:
+        if trainer.batch > self.max_epochs:
             return self.log(['Maximal number of epochs reached'], stop_training=True)
         return
 
@@ -341,7 +341,9 @@ class MaxTime(Extension):
         self.max_time = max_time
         self.begin_time = time.time()
 
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
+        self.state_dict_attributes = ("begin_time",)
+
+    def _execute(self, trainer=None, end_epoch=False):
         if (time.time() - self.begin_time) > self.max_time:
             return self.log(['Time exceeded'], stop_training=True)
         return

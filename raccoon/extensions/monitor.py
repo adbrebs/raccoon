@@ -43,13 +43,13 @@ class MetricMonitor(Extension):
 
         self.checkpoint_attributes = ("history", "iterations")
 
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
+    def _execute(self, trainer=None, end_epoch=False):
         dict_metric_values = self.compute_metrics()
 
         # Save metrics in history
         for metric_name, v in dict_metric_values.items():
             self.history[metric_name].append(v)
-            self.iterations[metric_name].append(batch_id)
+            self.iterations[metric_name].append(trainer.batch)
 
         return self.log([f'{str_grey(metric)}: {dict_metric_values[metric]:.7g}'
                          for metric in self.metric_names])
@@ -95,9 +95,6 @@ class ValidationMonitor(MetricMonitor):
                 dict_metrics[n] += dict_values[n] * bs
 
         return {n: dict_metrics[n] / n_data for n in self.metric_names}
-
-
-ValidMonitor = ValidationMonitor
 
 
 class TrainMonitor(MetricMonitor):

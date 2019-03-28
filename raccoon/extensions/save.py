@@ -1,5 +1,4 @@
 from pathlib import Path
-import pickle
 
 from raccoon.extensions.base import Extension
 
@@ -36,14 +35,14 @@ class Saver(Extension):
         if restore_path:
             self.on_start = True
 
-    def start(self):
+    def start(self, trainer=None):
         if not self.restore_path:
             return super().start()
 
         self.restore(self.restore_path)
         return self.log([f'Object loaded from disk path: {self.restore_path}'])
 
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
+    def _execute(self, trainer=None, end_epoch=False):
         return self.log(self.save())
 
     def save(self, file_path=None):
@@ -74,39 +73,6 @@ class Saver(Extension):
         raise NotImplementedError
 
 
-class MetricSaver(Saver):
-    """Saves the history of a ValidationMonitor extension"""
-
-    def __init__(self, metric_monitor, folder_path, freq=None, name=None):
-
-        if name is None:
-            name = metric_monitor.name
-        if freq is None:
-            freq = metric_monitor.freq
-        super().__init__('Metric saver ' + name, freq, folder_path, 'metric_saver_' + name)
-        self.metric_monitor = metric_monitor
-
-    def _save(self, file_path):
-
-        with open(file_path, 'wb') as file_handle:
-            d = {'iterations': self.metric_monitor.iterations,
-                 'history': self.metric_monitor.history}
-            pickle.dump(d, file_handle)
-            file_handle.close()
-
-        return [self.name + f' Metric histories dumped into {self.folder_path.resolve()}']
-
-
-class ModelSaver(Saver):
-    """Saves the model at specified frequency"""
-
-    def __init__(self, freq, folder_path, fun_save):
-        super().__init__('Model saver', freq, folder_path, 'model_at_iter', fun_save=fun_save)
-
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
-        return self.log(self.save(file_path=self.folder_path / f"{self.file_name}_{batch_id}.net"))
-
-
 class MonitorObjectSaver(Saver):
     """
     Saves an object based on a monitor extension
@@ -125,11 +91,15 @@ class MonitorObjectSaver(Saver):
         dont_save_for_first_n_it (int, default None): If int, the object is not saved at
             the beginning of training. This is useful to avoid too many copies when improvement
             is fast at the beginning of training.
+
+    Notes:
+        - When you feed the extensions to the Trainer, the order of the extensions is important.
+            This one should be added after its monitor_extension.
     """
 
     def __init__(self, monitor_extension, metric_name, folder_path,
                  fun_save, object_name, fun_restore=None,
-                 restore_at_the_end=True, file_name='best.obj',
+                 restore_at_the_end=False, file_name='best.obj',
                  on_end=True, on_start=False,
                  metric_mode='min', dont_save_for_first_n_it=None, freq=False,
                  restore_path=""):
@@ -155,7 +125,7 @@ class MonitorObjectSaver(Saver):
         self.dont_dump_for_first_n_it = dont_save_for_first_n_it
         self.n_times_checked = 0
 
-    def _execute(self, batch_id, epoch_id, end_epoch=False):
+    def _execute(self, trainer=None, end_epoch=False):
 
         # Check if dont_save_for_first_n_it has passed
         self.n_times_checked += 1
@@ -176,12 +146,12 @@ class MonitorObjectSaver(Saver):
 
         # If it has never been dumped, we dump it.
         if (self.dont_dump_for_first_n_it is not None and
-            self.dont_dump_for_first_n_it == self.n_times_checked):
+                self.dont_dump_for_first_n_it == self.n_times_checked):
             return
 
-        return super()._execute(batch_id, epoch_id, end_epoch)
+        return super()._execute(trainer, end_epoch)
 
-    def finish(self, batch_id, epoch_id):
+    def finish(self, trainer=None):
         log = self.log()
 
         # The object has not yet been saved on the disk, so we save it
