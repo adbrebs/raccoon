@@ -9,7 +9,7 @@ from torchvision import datasets, transforms
 
 from raccoon import (
     TrainMonitor, ValidMonitor, MaxIteration, MutableDictValue, ScalarValidationSchedule,
-    MetricSaver, ModelSaver)
+    MetricSaver, ModelSaver, Checkpoint)
 from raccoon.trainer import Trainer
 
 
@@ -103,9 +103,10 @@ if __name__ == '__main__':
     max_epoch = MaxIteration(
         max_epochs=10)
 
+    mutable_lr = MutableDictValue("lr", optimizer.defaults, "lr")
     lr_schedule = ScalarValidationSchedule(
         valid_monitor, "acc",
-        mutable_scalar=MutableDictValue("lr", optimizer.defaults, "lr"),
+        mutable_scalar=mutable_lr,
         patience=2,
         max_patience=3,
         decay_rate=2,
@@ -117,9 +118,18 @@ if __name__ == '__main__':
         folder_path="./dump",
         fun_save=lambda path: torch.save(model.state_dict(), path))
 
+    extensions = [valid_monitor, valid_saver, max_epoch, lr_schedule, best_net_saver]
+
+    def fun_save_state(trainer):
+        return {"model": model.state_dict(),
+                "optimizer": optimizer.state_dict(),
+                "lr": mutable_lr.read()}
+
+    checkpoint = Checkpoint(extensions, "", 100)
+
     trainer = Trainer(
         train_monitor=train_monitor,
         data_generator=train_data_gen,
-        extensions=[valid_monitor, valid_saver, max_epoch, lr_schedule, best_net_saver])
+        extensions=extensions)
 
     trainer.train()

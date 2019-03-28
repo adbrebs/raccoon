@@ -1,4 +1,5 @@
 from raccoon.extensions.base import Extension
+from raccoon.extensions.checkpoint import Checkpoint
 from raccoon.extensions.monitor import (
     ValidMonitor,
     ValidationMonitor,

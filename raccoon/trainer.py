@@ -1,8 +1,10 @@
 from collections import defaultdict
 from contextlib import contextmanager
+from itertools import chain
 import sys
 import time
 
+from raccoon import Extension
 from raccoon.utils import wrap_text, print_green, print_red, str_magenta, str_yellow, pretty_time
 
 

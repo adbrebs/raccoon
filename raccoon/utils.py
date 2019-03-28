@@ -1,4 +1,5 @@
 from functools import partial
+import pickle
 import textwrap
 
 

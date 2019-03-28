@@ -31,6 +31,8 @@ class Extension(object):
         self.on_end = on_end
         self.on_start = on_start
 
+        self.checkpoint_attributes = None
+
     def execute(self, batch_id, epoch_id, end_epoch=False):
         """This method is called at every minibatch of the training process.
 
@@ -79,6 +81,13 @@ class Extension(object):
     def log(self, lines=None, stop_training=False):
         """Creates a log object to potentially display information in the terminal."""
         return Log(extension=self, lines=lines, stop_training=stop_training)
+
+    def state_dict(self):
+        all_attributes = vars(self)
+        return {k: all_attributes[k] for k in self.checkpoint_attributes}
+
+    def load_state_dict(self, state_dict):
+        vars(self).update(state_dict)
 
 
 class Log:

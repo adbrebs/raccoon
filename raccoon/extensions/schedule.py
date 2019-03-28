@@ -61,6 +61,8 @@ class ValidationSchedule(Extension):
         # The best value of the metric so far.
         self.best_value = self.m * float('Inf')
 
+        self.checkpoint_attributes = ("waiting", "total_waiting", "best_value")
+
     def _execute(self, batch_id, epoch_id, end_epoch=False):
 
         if self.total_waiting > self.absolute_patience:

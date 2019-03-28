@@ -41,6 +41,8 @@ class MetricMonitor(Extension):
         self.history = defaultdict(list)
         self.iterations = defaultdict(list)
 
+        self.checkpoint_attributes = ("history", "iterations")
+
     def _execute(self, batch_id, epoch_id, end_epoch=False):
         dict_metric_values = self.compute_metrics()
 
