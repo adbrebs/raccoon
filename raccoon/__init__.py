@@ -14,6 +14,7 @@ from raccoon.extensions.schedule import (
     ScalarLinearRange,
     ScalarDecay,
     MaxIteration,
-    MaxTime)
+    MaxTime,
+    RegularFunction)
 
 from raccoon.trainer import Trainer

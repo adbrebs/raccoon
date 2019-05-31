@@ -237,7 +237,7 @@ class ScalarValidationSchedule(ValidationSchedule):
 
     def display_info(self):
         var_display = self.var.read()
-        return f'{var_display},'
+        return f'{var_display:5g},'
 
 
 class ScalarSchedule(Extension):
@@ -347,3 +347,13 @@ class MaxTime(Extension):
         if (time.time() - self.begin_time) > self.max_time:
             return self.log(['Time exceeded'], stop_training=True)
         return
+
+
+class RegularFunction(Extension):
+    def __init__(self, name, freq, function, on_end=False, on_start=False):
+        super().__init__(name=name, freq=freq, on_end=on_end, on_start=on_start)
+        self.function = function
+
+    def _execute(self, trainer=None, end_epoch=False):
+        lines, stopping = self.function(trainer=trainer, end_epoch=end_epoch)
+        return self.log(lines=lines, stop_training=stopping)

@@ -41,6 +41,7 @@ def print_color(color, info, value="", newline=False, indent_level=0):
 print_green = partial(print_color, Colors.GREEN)
 print_red = partial(print_color, Colors.RED)
 print_blue = partial(print_color, Colors.BLUE)
+print_yellow = partial(print_color, Colors.YELLOW)
 
 
 def str_color(color, s):
