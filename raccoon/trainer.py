@@ -33,8 +33,6 @@ class Trainer:
             extensions = []
 
         self.print_wrap_width = print_wrap_width
-        self.print = lambda s, indent_level: print(
-            wrap_text(s, indent_level, width=print_wrap_width))
 
         self.train_monitor = train_monitor
         self.extensions = [train_monitor] + extensions
@@ -108,7 +106,7 @@ class Trainer:
                        f'{iteration_str} {n_iterations} - '
                        f'{spent_time_str} {pretty_time(spent_time)}')
 
-        self.print(display_str, 0)
+        self.print(display_str, 0, self.print_wrap_width + 20)  # because color counts
         self.print_logs(logs)
         self.print_lines()
 
@@ -177,6 +175,11 @@ class Trainer:
         except KeyboardInterrupt:
             print_red("Alright! We don't even run the extensions one last time.")
             sys.exit()
+
+    def print(self, s, indent_level, print_wrap_width=None):
+        if print_wrap_width is None:
+            print_wrap_width = self.print_wrap_width
+        print(wrap_text(s, indent_level, width=print_wrap_width))
 
     def print_lines(self, times=1):
         print(*['-' * self.print_wrap_width]*times, sep="\n")

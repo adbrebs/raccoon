@@ -199,10 +199,12 @@ class ScalarValidationSchedule(ValidationSchedule):
             divided by this decay_rate.)
         min_value: float (default None)
             the minimal value that we tolerate for the scalar.
-            Below it, we stop training.
+            Below it, we stop training (if stop_training=True).
         max_value: float (default None)
             the maximal value that we tolerate for the scalar.
-            Above it, we stop training.
+            Above it, we stop training (if stop_training=True).
+        stop_training (bool, default True):
+            If True, training will stop when the min_value or max_value conditions are met.
 
     See mother class ValidationSchedule for the description of the other
     parameters.
@@ -211,15 +213,21 @@ class ScalarValidationSchedule(ValidationSchedule):
     def __init__(self, monitor, metric_name, mutable_scalar,
                  patience=5, max_patience=7, decay_rate=2., max_value=None,
                  min_value=None, metric_mode='min',
-                 name='Scalar validation schedule'):
+                 name='Scalar validation schedule', stop_training=True):
 
         self.var = mutable_scalar
         self.decay_rate = decay_rate
         self.min_value = min_value
-        self.max_value = max_value
+        self.min_value = -float('Inf') if min_value is None else min_value
+        self.max_value = float('Inf') if max_value is None else max_value
+        self.stop_training = stop_training
 
         def process_function():
-            self.var.divide_by(self.decay_rate)
+            old_value = self.var.read()
+            if self.max_value > self.var > self.min_value:
+                self.var.divide_by(self.decay_rate)
+                return f"Value changed from {old_value} to {self.var.read()}."
+            return f"Value not changed because it has already reached its max or min."
 
         super().__init__(monitor, metric_name, process_function,
                          patience=patience, max_patience=max_patience,
@@ -228,10 +236,10 @@ class ScalarValidationSchedule(ValidationSchedule):
     def _execute(self, trainer=None, end_epoch=False):
         log = super()._execute(trainer, end_epoch)
         if not log.stop_training:
-            if self.min_value and self.var < self.min_value:
-                return self.log(['too small'], stop_training=True)
-            elif self.max_value and self.var > self.max_value:
-                return self.log(['too big'], stop_training=True)
+            if self.var < self.min_value:
+                return self.log(['too small'], stop_training=self.stop_training)
+            elif self.var > self.max_value:
+                return self.log(['too big'], stop_training=self.stop_training)
 
         return log
 
