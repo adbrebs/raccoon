@@ -237,9 +237,11 @@ class ScalarValidationSchedule(ValidationSchedule):
         log = super()._execute(trainer, end_epoch)
         if not log.stop_training:
             if self.var < self.min_value:
-                return self.log(['too small'], stop_training=self.stop_training)
+                log.lines.append('too small')
+                log.stop_training = self.stop_training
             elif self.var > self.max_value:
-                return self.log(['too big'], stop_training=self.stop_training)
+                log.lines.append('too big')
+                log.stop_training = self.stop_training
 
         return log
 
